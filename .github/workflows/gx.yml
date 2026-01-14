@@ -1,37 +1,38 @@
-name: 同步原仓库更新  # 工作流名称
+ame: 同步原仓库更新  # 工作流名称
 
 # 触发条件：1. 每小时定时执行；2. 支持手动触发
-on:
-  schedule:
-    - cron: '*/20 * * * *'  # 每小时同步一次，可根据需要调整（比如*/30 * * * * 为每30分钟）
+on: 在：
+  schedule:  计划：
+    - cron: '0 * * * *'  # 每小时同步一次，可根据需要调整（比如*/30 * * * * 为每30分钟）
   workflow_dispatch:  # 手动触发开关，在Actions页面可点击执行
 
-jobs:
-  sync:
+jobs: 任务：
+  sync:  同步：
     runs-on: ubuntu-latest  # 运行环境（GitHub 提供的 Ubuntu 虚拟机）
-    steps:
-      # 步骤1：检出你自己仓库的代码到虚拟机
-      - name: 检出代码
-        uses: actions/checkout@v4
-        with:
+    steps:     步骤:
+      # 步骤1：检出你自己仓库的代码到虚拟机 
+      - name: 检出代码 
+        uses: actions/checkout@v4         使用：actions/checkout@v4
+        with:         具有：
           fetch-depth: 0  # 拉取完整的提交历史，避免合并时出现冲突问题
 
       # 步骤2：配置 Git 提交身份（必须匹配你的 GitHub 信息，否则推送会失败）
-      - name: 配置 Git 用户名和邮箱
-        run: |
+      - name: 配置 Git 用户名和邮箱 
+        run: |         运行: |
           git config --global user.name "buyu10086"
+          Go config--全局user.name"buyu10086
           git config --global user.email "1753462733@qq.com"
-
-      # 步骤3：添加上游仓库并执行同步操作
-      - name: 同步原仓库最新代码
-        run: |
-          # 添加上游仓库（原作者的仓库地址）
+          git config --global user.email "1753462733@qq.com
+      # 步骤3：添加上游仓库并执行同步操作 
+      - name: 同步原仓库最新代码 
+        run: |         运行: |
+          # 添加上游仓库（原作者的仓库地址） 
           git remote add upstream https://github.com/quanyu98/zubo.git
-          # 拉取上游仓库的所有更新
-          git fetch upstream
+          # 拉取上游仓库的所有更新 
+          git fetch upstream 
           # 切换到本地主分支（如果原仓库主分支是master，改为git checkout master）
-          git checkout main
+          git checkout main 
           # 合并上游主分支的更新（--no-edit 自动跳过提交信息编辑，适合自动化）
-          git merge upstream/main --no-edit
+          git merge upstream/main --no-edit 
           # 将合并后的代码推送到你的 GitHub 仓库
-          git push origin main
+          git push origin main 
