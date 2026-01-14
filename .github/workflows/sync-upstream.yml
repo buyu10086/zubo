@@ -20,7 +20,7 @@ jobs: 任务：
       - name: 配置 Git 用户名和邮箱 
         run: |         运行: |
           git config --global user.name "buyu10086"
-          Go config--全局user.name"buyu10086
+          Go config--全局user.name"buyu10086"
           git config --global user.email "1753462733@qq.com"
           git config --global user.email "1753462733@qq.com
       # 步骤3：添加上游仓库并执行同步操作 
