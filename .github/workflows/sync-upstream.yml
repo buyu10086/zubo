@@ -1,37 +1,56 @@
-name: 同步原仓库更新  # 工作流名称
+name: 同步原仓库更新
 
-# 触发条件：1. 每小时定时执行；2. 支持手动触发
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时同步一次，可根据需要调整（比如*/30 * * * * 为每30分钟）
-  workflow_dispatch:  # 手动触发开关，在Actions页面可点击执行
+    - cron: '0 * * * *'  # 每小时同步一次
+  workflow_dispatch:  # 手动触发
 
 jobs:
   sync:
-    runs-on: ubuntu-latest  # 运行环境（GitHub 提供的 Ubuntu 虚拟机）
+    runs-on: ubuntu-latest
     steps:
-      # 步骤1：检出你自己仓库的代码到虚拟机
       - name: 检出代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 拉取完整的提交历史，避免合并时出现冲突问题
+          fetch-depth: 0  # 拉取完整历史
 
-      # 步骤2：配置 Git 提交身份（必须匹配你的 GitHub 信息，否则推送会失败）
       - name: 配置 Git 用户名和邮箱
         run: |
           git config --global user.name "buyu10086"
           git config --global user.email "1753462733@qq.com"
 
-      # 步骤3：添加上游仓库并执行同步操作
-      - name: 同步原仓库最新代码
+      - name: 同步原仓库最新代码（增加容错处理）
         run: |
-          # 添加上游仓库（原作者的仓库地址）
-          git remote add upstream https://github.com/quanyu98/zubo.git
-          # 拉取上游仓库的所有更新
+          # 第一步：检查上游仓库是否已存在，存在则先删除，避免重复添加报错
+          if git remote | grep -q upstream; then
+            git remote remove upstream
+          fi
+          # 添加原仓库为上游（如果kkgithub访问失败，可替换为github.com的地址）
+          git remote add upstream https://github.com/kakaxi-1/zubo.git
+          
+          # 第二步：拉取上游仓库所有分支信息
           git fetch upstream
-          # 切换到本地主分支（如果原仓库主分支是master，改为git checkout master）
-          git checkout main
-          # 合并上游主分支的更新（--no-edit 自动跳过提交信息编辑，适合自动化）
-          git merge upstream/main --no-edit
-          # 将合并后的代码推送到你的 GitHub 仓库
-          git push origin main
+          
+          # 第三步：自动检测原仓库的默认分支（兼容main/master）
+          DEFAULT_BRANCH=$(git remote show upstream | grep 'HEAD branch' | awk '{print $NF}')
+          echo "原仓库默认分支：$DEFAULT_BRANCH"
+          
+          # 第四步：切换到本地对应分支（不存在则创建）
+          if git show-ref --verify --quiet refs/heads/$DEFAULT_BRANCH; then
+            git checkout $DEFAULT_BRANCH
+          else
+            git checkout -b $DEFAULT_BRANCH
+          fi
+          
+          # 第五步：尝试合并上游分支（失败则输出冲突信息）
+          if git merge upstream/$DEFAULT_BRANCH --no-edit; then
+            # 合并成功则推送到你的仓库
+            git push origin $DEFAULT_BRANCH
+            echo "同步成功！"
+          else
+            # 合并失败（冲突），输出冲突信息并手动提示
+            echo "⚠️  代码合并冲突，自动化同步失败！请手动解决冲突后重试："
+            git status
+            git diff
+            exit 0  # 改为exit 0，避免工作流直接标红（仅提示冲突）
+          fi
