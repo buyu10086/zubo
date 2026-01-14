@@ -26,7 +26,7 @@ jobs:
       - name: 同步原仓库最新代码
         run: |
           # 添加上游仓库（原作者的仓库地址）
-          git remote add upstream https://github.com/kakaxi-1/zubo.git
+          git remote add upstream https://github.com/quanyu98/zubo.git
           # 拉取上游仓库的所有更新
           git fetch upstream
           # 切换到本地主分支（如果原仓库主分支是master，改为git checkout master）
